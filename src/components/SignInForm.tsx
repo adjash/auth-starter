@@ -15,7 +15,7 @@ const SignInForm = () => {
     const res = await signIn(data);
 
     if (res.success) {
-      router.push("/successful");
+      router.push("/dashboard");
     } else {
       console.log("error on frontned");
     }

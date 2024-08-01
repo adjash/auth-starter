@@ -4,6 +4,7 @@ import { lucia } from "@/lib/lucia";
 import prisma from "@/lib/prisma";
 import { UserDataSignUpSchema, UserDataSignInSchema } from "@/types/UserData";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { Argon2id } from "oslo/password";
 
 export const signUp = async (values: UserDataSignUpSchema) => {
@@ -27,10 +28,11 @@ export const signUp = async (values: UserDataSignUpSchema) => {
     });
 
     //generate a session cookie for the user
-    const session = await lucia.createSession(user.id, {});
-    const sessionCookie = await lucia.createSessionCookie(session.id);
+    // const session = await lucia.createSession(user.id, {});
+    // const sessionCookie = await lucia.createSessionCookie(session.id);
 
-    cookies().set(sessionCookie.name, sessionCookie.value);
+    // cookies().set(sessionCookie.name, sessionCookie.value);
+    setCookie(user.id);
 
     //return success true
     return { success: true };
@@ -54,9 +56,22 @@ export const signIn = async (values: UserDataSignInSchema) => {
   );
   if (!passwordMatch) return { success: false, error: "!passwordMatch" };
 
-  const session = await lucia.createSession(user.id, {});
-  const sessionCookie = await lucia.createSessionCookie(session.id);
-  cookies().set(sessionCookie.name, sessionCookie.value);
+  // const session = await lucia.createSession(user.id, {});
+  // const sessionCookie = await lucia.createSessionCookie(session.id);
+  // cookies().set(sessionCookie.name, sessionCookie.value);
+  setCookie(user.id);
 
   return { success: true };
+};
+
+export const logOut = async () => {
+  const sessionCookie = await lucia.createBlankSessionCookie();
+  cookies().set(sessionCookie.name, sessionCookie.value);
+  return redirect("/authenticate");
+};
+
+const setCookie = async (userId: string) => {
+  const session = await lucia.createSession(userId, {});
+  const sessionCookie = await lucia.createSessionCookie(session.id);
+  return cookies().set(sessionCookie.name, sessionCookie.value);
 };
