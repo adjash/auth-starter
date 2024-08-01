@@ -8,4 +8,5 @@ export interface UserDataSignUpSchema {
 export interface UserDataSignInSchema {
   email: string;
   password: string;
+  picture?: string;
 }

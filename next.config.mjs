@@ -4,6 +4,14 @@ const nextConfig = {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
     return config;
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

@@ -1,8 +1,10 @@
 "use server";
 
+import { googleOAuthClient } from "@/lib/googleOauth";
 import { lucia } from "@/lib/lucia";
 import prisma from "@/lib/prisma";
 import { UserDataSignUpSchema, UserDataSignInSchema } from "@/types/UserData";
+import { generateCodeVerifier, generateState } from "arctic";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Argon2id } from "oslo/password";
@@ -70,8 +72,35 @@ export const logOut = async () => {
   return redirect("/authenticate");
 };
 
-const setCookie = async (userId: string) => {
+export const setCookie = async (userId: string) => {
   const session = await lucia.createSession(userId, {});
   const sessionCookie = await lucia.createSessionCookie(session.id);
   return cookies().set(sessionCookie.name, sessionCookie.value);
+};
+
+export const getGoogleOauthConsentUrl = async () => {
+  try {
+    const state = generateState();
+    const codeVerifier = generateCodeVerifier();
+
+    cookies().set("codeVerifier", codeVerifier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+    cookies().set("state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    const authUrl = await googleOAuthClient.createAuthorizationURL(
+      state,
+      codeVerifier,
+      {
+        scopes: ["email", "profile"],
+      }
+    );
+    return { success: true, url: authUrl.toString() };
+  } catch (error) {
+    return { success: false, error: "some wrong in google oauth client" };
+  }
 };
